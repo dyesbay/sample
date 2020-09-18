@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    <changeSet id="0.0" author="dyesbay">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <primaryKeyExists tableName="databasechangelog"/>
+            </not>
+        </preConditions>
+        <addPrimaryKey tableName="databasechangelog"
+                       columnNames="id, author"/>
+        <rollback>
+            <dropPrimaryKey tableName="databasechangelog"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,68 @@
+---
+spring:
+  profiles:
+    include: management,admin,module
+    active: dev
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+
+
+info:
+  app:
+    mode: ${spring.profiles.active}
+    url: http://app-${info.app.name}:${server.port}${server.context-path}
+    swagger: ${info.app.url}/swagger-ui.html
+  redis:
+    enabled: true
+    timeout: 3000
+    read:
+      host: app-redis
+      port: 6379
+    write:
+      host: app-redis
+      port: 6379
+  locale:
+    default: ru
+  java:
+    vendor: ${java.specification.vendor}
+    version: ${java.version}
+    enabled: true
+  url:
+    admin: /actuator, /actuator/**
+    system: /health, /application/**
+    swagger: /swagger-resources/**,/swagger-ui.html,/v2/api-docs,/webjars/**
+    ignoreLog: ${info.url.swagger},/actuator/health
+
+
+logging:
+  level: info
+
+security:
+  filter-order: 40
+  basic:
+    enabled: false
+  ignored: ${info.url.system},${info.url.swagger},${info.url.admin}
+
+---
+spring:
+  devtools:
+    livereload:
+      enabled: true
+      port: 35730
+    restart:
+      enabled: true
+  profiles: dev
+  boot:
+    admin:
+      auto-registration: false
+
+---
+spring:
+  profiles: test
+  boot:
+    admin:
+      client:
+        service-url: ${info.app.url}
+        management-url: ${info.app.url}/actuator
+        health-url: ${info.app.url}/actuator/health

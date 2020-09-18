@@ -1,0 +1,5 @@
+CREATE DATABASE expert;
+CREATE ROLE expert LOGIN PASSWORD 'expert@db';
+
+GRANT ALL PRIVILEGES ON DATABASE expert TO expert;
+

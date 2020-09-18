@@ -1,0 +1,131 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.14.RELEASE'
+        classpath 'io.franzbecker:gradle-lombok:1.14'
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'checkstyle'
+apply plugin: 'io.franzbecker.gradle-lombok'
+apply plugin: 'docker'
+apply plugin: 'application'
+
+checkstyle {
+    configFile = new File(rootDir, 'checkstyle.xml')
+    toolVersion = '8.11'
+}
+
+bootRun.dependsOn checkstyleMain
+
+jar {
+    baseName = application
+    version = version
+}
+
+task buildDocker(type: Docker, dependsOn: build) {
+    def jarName = application + "-" + version + ".jar"
+
+    baseImage = "openjdk:8-jre-alpine"
+    addFile("build/libs/$jarName", "/target/$jarName")
+    entryPoint(["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/target/$jarName"])
+    doLast {
+        new File("$projectDir/docker/.env").text = "" +
+                "APPLICATION=$application\n" +
+                "TAG=$version\n" +
+                "PORT=$port\n" +
+                "MODE=${mode}\n"
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://plugins.gradle.org/m2/'
+    }
+}
+
+mainClassName = 'app.Application'
+
+task debugApp(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = mainClassName
+    debug = true
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    // runtime dependencies
+    runtime 'org.springframework.boot:spring-boot-devtools'
+
+    // test dependencies
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+
+    // compile only lombok
+    compile 'org.projectlombok:lombok:1.18.12'
+
+    // Spring dependencies
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-security'
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    compile 'org.springframework.cloud:spring-cloud-starter-zuul'
+    compile 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    compile 'de.codecentric:spring-boot-admin-starter-client:1.5.1'
+
+    // DB dependencies.
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+    compile 'org.hibernate:hibernate-c3p0:5.3.7.Final'
+    compile 'org.postgresql:postgresql'
+    compile 'org.liquibase:liquibase-core'
+
+    // Validators
+    compile 'org.hibernate:hibernate-validator'
+    compile 'javax.validation:validation-api:2.0.1.Final'
+
+    // Json
+    compile 'com.google.code.gson:gson:2.8.5'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    //redis
+    compile 'redis.clients:jedis:3.1.0'
+
+    // Swagger
+    compile 'io.springfox:springfox-swagger2:2.7.0'
+    compile 'io.springfox:springfox-swagger-ui:2.7.0'
+
+    // Caffeine cache provider
+    compile 'com.github.ben-manes.caffeine:caffeine:2.6.2'
+
+    // JWT
+    compile 'io.jsonwebtoken:jjwt:0.9.0'
+
+    // LDAP auth
+    compile("org.springframework.ldap:spring-ldap-core")
+    compile("org.springframework.security:spring-security-ldap")
+    compile("com.unboundid:unboundid-ldapsdk")
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Dalston.RELEASE'
+    }
+}
+
+processResources {
+    filesMatching('gradle.properties') { expand(project.properties) }
+}
